@@ -1,9 +1,13 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ImageCropperComponent } from './components/image-cropper/image-cropper.component';
+import { ConfigComponent } from './components/image-cropper-config/config.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [
+    ImageCropperComponent,
+    ConfigComponent
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
