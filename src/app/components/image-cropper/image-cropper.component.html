@@ -1,0 +1,94 @@
+<div class="container py-4">
+  <div class="row">
+    <!-- Upload Section -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Upload & Crop Image</h5>
+        </div>
+        <div class="card-body">
+          <!-- File Upload -->
+          <div class="mb-3">
+            <input type="file" class="form-control" (change)="fileChangeEvent($event)" accept="image/*">
+          </div>
+
+          <!-- Configuration Selection -->
+          <div class="mb-3">
+            <label for="configSelect" class="form-label">Configuration</label>
+            <select 
+              id="configSelect"
+              class="form-select" 
+              [(ngModel)]="selectedConfigId"
+              (change)="onConfigChange()">
+              <option [value]="null">No Configuration</option>
+              <!-- Show configs only for authenticated users -->
+              <ng-container *ngIf="auth.isAuthenticated$ | async">
+                <option 
+                  *ngFor="let config of availableConfigs" 
+                  [value]="config.id">
+                  Config {{ config.id }} - {{ getPositionLabel(config.logo_position) }} ({{ config.scale_down }})
+                </option>
+              </ng-container>
+            </select>
+            
+            <!-- Login prompt for non-authenticated users -->
+            <div *ngIf="!(auth.isAuthenticated$ | async)" class="mt-2">
+              <div class="alert alert-info py-2 px-3 mb-0">
+                <small>
+                  <i class="bi bi-info-circle me-1"></i>
+                  <strong>Sign in to access logo configurations.</strong> 
+                  <button 
+                    class="btn btn-link btn-sm p-0 ms-2 text-decoration-none" 
+                    (click)="auth.loginWithRedirect()">
+                    Sign in now
+                  </button>
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Cropper -->
+          <div *ngIf="imageChangedEvent">
+            <image-cropper
+              [imageChangedEvent]="imageChangedEvent"
+              [maintainAspectRatio]="false"
+              [aspectRatio]="0"
+              format="png"
+              (imageCropped)="imageCropped($event)">
+            </image-cropper>
+          </div>
+
+          <!-- Generate Button -->
+          <div class="d-grid mt-3">
+            <button 
+              class="btn btn-primary" 
+              (click)="generateImage()"
+              [disabled]="!croppedImage">
+              Generate Image
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Final Result</h5>
+        </div>
+        <div class="card-body text-center">
+          <div *ngIf="finalImageUrl; else noImage">
+            <img [src]="finalImageUrl" class="img-fluid mb-3" alt="Final Result">
+            <button class="btn btn-success" (click)="downloadImage()">
+              Download Image
+            </button>
+          </div>
+          <ng-template #noImage>
+            <p class="text-muted">Final image will appear here</p>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

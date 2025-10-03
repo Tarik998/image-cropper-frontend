@@ -1,32 +1,56 @@
-import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, Subject } from 'rxjs';
+import { CropConfig, CropParams } from './../../models/interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageService {
-      private apiUrl = 'http://localhost:5001/api';
+  private readonly apiUrl = 'http://localhost:5001/api';
+  
+  // Subject to notify components about config changes
+  private configChangedSubject = new Subject<void>();
+  public configChanged$ = this.configChangedSubject.asObservable();
 
-        constructor(private http: HttpClient) {}
-        // Service methods logic
+  constructor(private http: HttpClient) {}
 
-         uploadForPreview() {
-            // Upload for preview logic
-         }
-         generateFinalImage() {
-            // Generate final image logic
-            }
-         getAllConfigs() {
-            // Get all configurations logic
-         }
+  getConfig(): Observable<CropConfig> {
+    return this.http.get<CropConfig>(`${this.apiUrl}/config`);
+  }
 
-         createConfig() {   
-            // Create configuration logic
-         }
-         
-         getConfigById() {
-               // Get configuration by ID logic
-            }
+  getAllConfigs(): Observable<CropConfig[]> {
+    return this.http.get<CropConfig[]>(`${this.apiUrl}/configs`);
+  }
 
-        }
+  saveConfig(config: CropConfig): Observable<any> {
+    return this.http.post(`${this.apiUrl}/config`, config);
+  }
+
+  deleteConfig(configId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/config/${configId}`);
+  }
+
+  // Method to notify components about config changes
+  notifyConfigChanged(): void {
+    this.configChangedSubject.next();
+  }
+
+  cropImage(imageFile: File, cropParams: CropParams, configId?: number | null): Observable<Blob> {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    formData.append('x', cropParams.x.toString());
+    formData.append('y', cropParams.y.toString());
+    formData.append('width', cropParams.width.toString());
+    formData.append('height', cropParams.height.toString());
+    
+    // Only append configId if it's provided and not null
+    if (configId !== null && configId !== undefined) {
+      formData.append('configId', configId.toString());
+    }
+
+    return this.http.post(`${this.apiUrl}/crop`, formData, { 
+      responseType: 'blob' 
+    });
+  }
+}

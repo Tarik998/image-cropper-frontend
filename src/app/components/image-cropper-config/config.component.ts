@@ -1,46 +1,227 @@
-import { Component } from "@angular/core";
-import { ImageService } from "../services/image.service";
+import { Component } from '@angular/core';
+import { ImageService } from '../services/image.service';
+import { CropConfig } from '../../models/interfaces';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-config',
-  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './config.component.html',
-  styleUrls: ['./config.component.css']
+  styleUrls: ['./config.component.css'],
+  standalone: true
 })
 export class ConfigComponent {
- configs: any[] = [];
-  currentConfig: any = {};
+  config: CropConfig = {
+    logo_position: 'bottom-right',
+    scale_down: 0.25
+  };
+
+  selectedLogoFile: File | null = null;
+  logoPreviewUrl: string | null = null;
+  existingLogoUrl: string | null = null;
+  isLoading = false;
+  
+  // Configuration management
+  savedConfigs: CropConfig[] = [];
   selectedConfigId: number | null = null;
+  showConfigList = false;
+  maxConfigs = 3; // Maximum allowed configurations
 
+  positions = [
+    { value: 'top-left', label: 'Top Left' },
+    { value: 'top-right', label: 'Top Right' },
+    { value: 'bottom-left', label: 'Bottom Left' },
+    { value: 'bottom-right', label: 'Bottom Right' },
+    { value: 'center', label: 'Center' }
+  ];
 
-get selectedConfig() {
-        return 'default';
+  constructor(private imageService: ImageService) {
+    this.loadAllConfigs();
   }
 
-  constructor(private imageService: ImageService) {}
-
-   ngOnInit() {
-    // Initialization logic
+  loadAllConfigs(): void {
+    this.isLoading = true;
+    this.imageService.getAllConfigs().subscribe({
+      next: (configs: any) => {
+        this.savedConfigs = configs;
+        // Load the most recent config by default
+        if (configs.length > 0) {
+          this.loadConfigById(configs[0].id!);
+        }
+        this.isLoading = false;
+      },
+      error: (error: any) => {
+        console.error('Error loading configurations:', error);
+        alert('Error loading configurations');
+        this.isLoading = false;
+      }
+    });
   }
 
-   loadConfigs() {
-    // Load configurations logic
+ loadConfigById(configId: number): void {
+  const selectedConfig = this.savedConfigs.find(c => c.id === configId);
+  if (selectedConfig) {
+    this.config = { ...selectedConfig };
+    this.selectedConfigId = configId;
+    
+    // Display existing logo if available
+    this.existingLogoUrl = selectedConfig.logo_image || null;
+    
+    // Clear any new logo selection
+    this.selectedLogoFile = null;
+    this.logoPreviewUrl = null;
+  }
+}
+
+  // Check if configuration has a logo
+  hasLogo(config: CropConfig): boolean {
+    return !!(config.logo_image && config.logo_image.trim());
   }
 
-  selectConfigById() {
-    // Select configuration by ID logic
+  onLogoFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      // Check file size (limit to 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Logo image must be smaller than 2MB');
+        return;
+      }
+
+      this.selectedLogoFile = file;
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.logoPreviewUrl = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Please select a valid image file for the logo');
+    }
   }
 
-  resetSelectedConfig() {
-    // Reset selected configuration logic
+  saveConfig(): void {
+    this.isLoading = true;
+
+    // If new logo selected, convert to base64
+    if (this.selectedLogoFile) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.submitConfig(reader.result as string);
+      };
+      reader.readAsDataURL(this.selectedLogoFile);
+    } else {
+      // Use existing logo - convert null to undefined
+      this.submitConfig(this.existingLogoUrl || undefined);
+    }
   }
 
-  saveConfig() {
-    // Save configuration logic
+  private submitConfig(logoImage: string | undefined): void {
+    const configWithLogo: CropConfig = {
+      ...this.config,
+      logo_image: logoImage // Now properly typed as string | undefined
+    };
+
+    // Include ID if updating existing config
+    if (this.selectedConfigId) {
+      configWithLogo.id = this.selectedConfigId;
+    }
+
+    this.imageService.saveConfig(configWithLogo).subscribe({
+      next: (response: any) => {
+        console.log('Saved config:', response);
+        const action = this.selectedConfigId ? 'updated' : 'created';
+        alert(`Configuration ${action} successfully!`);
+        this.loadAllConfigs();
+        this.selectedLogoFile = null;
+        this.logoPreviewUrl = null;
+        this.isLoading = false;
+        
+        // Notify other components about config changes
+        this.imageService.notifyConfigChanged();
+      },
+      error: (error: any) => {
+        console.error('Save error:', error);
+        alert('Error saving configuration');
+        this.isLoading = false;
+      }
+    });
   }
 
-  resetForm() {
-    // Reset form logic
+  deleteConfig(configId: number): void {
+    if (confirm('Are you sure you want to delete this configuration?')) {
+      this.isLoading = true;
+      this.imageService.deleteConfig(configId).subscribe({
+        next: () => {
+          alert('Configuration deleted successfully!');
+          if (this.selectedConfigId === configId) {
+            this.selectedConfigId = null;
+          }
+          this.loadAllConfigs();
+          
+          // Notify other components about config changes
+          this.imageService.notifyConfigChanged();
+        },
+        error: (error: any) => {
+          console.error('Delete error:', error);
+          alert('Error deleting configuration');
+          this.isLoading = false;
+        }
+      });
+    }
   }
 
+  createNewConfig(): void {
+    if (this.savedConfigs.length >= this.maxConfigs) {
+      alert(`Maximum ${this.maxConfigs} configurations allowed. Please delete an existing configuration first.`);
+      return;
+    }
+
+    this.config = {
+      logo_position: 'bottom-right',
+      scale_down: 0.25
+    };
+    this.selectedConfigId = null;
+    this.existingLogoUrl = null;
+    this.selectedLogoFile = null;
+    this.logoPreviewUrl = null;
+  }
+
+  toggleConfigList(): void {
+    this.showConfigList = !this.showConfigList;
+  }
+
+  removeLogoPreview(): void {
+    this.selectedLogoFile = null;
+    this.logoPreviewUrl = null;
+  }
+
+  removeExistingLogo(): void {
+    this.existingLogoUrl = null;
+    this.config.logo_image = undefined; // Changed from null to undefined
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return 'Unknown';
+    try {
+      return new Date(dateString).toLocaleDateString() + ' ' + 
+             new Date(dateString).toLocaleTimeString();
+    } catch {
+      return 'Invalid Date';
+    }
+  }
+
+  getPositionLabel(position: string): string {
+    const pos = this.positions.find(p => p.value === position);
+    return pos ? pos.label : position;
+  }
+
+  canCreateNew(): boolean {
+    return this.savedConfigs.length < this.maxConfigs;
+  }
+
+  getRemainingSlots(): number {
+    return Math.max(0, this.maxConfigs - this.savedConfigs.length);
+  }
 }

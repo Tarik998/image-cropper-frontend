@@ -1,0 +1,185 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <!-- Saved Configurations Section -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            Saved Configurations 
+            <span class="badge bg-secondary">{{ savedConfigs.length }}/{{ maxConfigs }}</span>
+          </h5>
+          <button 
+            class="btn btn-sm btn-outline-primary"
+            (click)="toggleConfigList()">
+            {{ showConfigList ? 'Hide' : 'Show' }} All Configs
+          </button>
+        </div>
+        
+        <!-- Configuration Limit Info -->
+        <div class="card-body bg-light" *ngIf="!canCreateNew()">
+          <div class="alert alert-warning mb-0">
+            <strong>Configuration Limit Reached:</strong> 
+            You have reached the maximum of {{ maxConfigs }} configurations. 
+            Delete an existing configuration to create a new one.
+          </div>
+        </div>
+
+        <!-- Configuration List -->
+        <div class="card-body" *ngIf="showConfigList">
+          <div class="row" *ngIf="savedConfigs.length > 0; else noConfigs">
+            <div class="col-md-6 col-lg-4 mb-3" *ngFor="let savedConfig of savedConfigs">
+              <div class="card h-100" 
+                   [class.border-primary]="selectedConfigId === savedConfig.id">
+                <div class="card-body">
+                  <!-- Config Details -->
+                  <h6 class="card-title">Config #{{ savedConfig.id }}</h6>
+                  <p class="card-text small">
+                    <strong>Position:</strong> {{ getPositionLabel(savedConfig.logo_position) }}<br>
+                    <strong>Scale:</strong> {{ savedConfig.scale_down }}<br>
+                    <strong>Logo:</strong> 
+                    <span [class]="hasLogo(savedConfig) ? 'text-success' : 'text-danger'">
+                      {{ hasLogo(savedConfig) ? 'Yes' : 'No' }}
+                    </span><br>
+                    <strong>Created:</strong> {{ formatDate(savedConfig.created_at!) }}
+                  </p>
+                  
+                  <!-- Action Buttons -->
+                  <div class="d-grid gap-1">
+                    <button 
+                      class="btn btn-sm"
+                      [class.btn-primary]="selectedConfigId !== savedConfig.id"
+                      [class.btn-success]="selectedConfigId === savedConfig.id"
+                      (click)="loadConfigById(savedConfig.id!)"
+                      [disabled]="isLoading">
+                      {{ selectedConfigId === savedConfig.id ? 'Current' : 'Load' }}
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="deleteConfig(savedConfig.id!)"
+                      [disabled]="isLoading || savedConfigs.length <= 1">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noConfigs>
+            <div class="text-center text-muted py-4">
+              <p>No saved configurations found.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Current Configuration Editor -->
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            {{ selectedConfigId ? 'Edit Configuration #' + selectedConfigId : 'New Configuration' }}
+          </h5>
+          <button 
+            class="btn btn-sm btn-outline-secondary"
+            (click)="createNewConfig()"
+            [disabled]="isLoading || !canCreateNew()">
+            <i class="bi bi-plus"></i> Create New
+            <span *ngIf="!canCreateNew()" class="text-muted">({{ getRemainingSlots() }} slots left)</span>
+          </button>
+        </div>
+        <div class="card-body">
+          <!-- Current Logo Display -->
+          <div class="mb-4" *ngIf="existingLogoUrl && !logoPreviewUrl">
+            <label class="form-label">Current Logo</label>
+            <div class="d-flex align-items-center">
+              <img 
+                [src]="existingLogoUrl" 
+                alt="Current Logo" 
+                class="img-thumbnail"
+                style="max-height: 100px; max-width: 150px;"
+>              <div style="display: none; padding: 20px;" class="bg-light border rounded text-muted">
+                Error loading logo
+              </div>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-danger ms-2"
+                (click)="removeExistingLogo()"
+                [disabled]="isLoading">
+                Remove Current Logo
+              </button>
+            </div>
+          </div>
+
+          <!-- Logo Image Upload -->
+          <div class="mb-4">
+            <label class="form-label">
+              {{ existingLogoUrl ? 'Change Logo Image' : 'Logo Image' }}
+              <small class="text-muted">(Max 2MB)</small>
+            </label>
+            <input 
+              type="file" 
+              class="form-control mb-2" 
+              (change)="onLogoFileSelected($event)"
+              accept="image/*"
+              [disabled]="isLoading">
+            
+            <!-- New Logo Preview -->
+            <div *ngIf="logoPreviewUrl" class="mt-3">
+              <label class="form-label">New Logo Preview</label>
+              <div class="d-flex align-items-center">
+                <img 
+                  [src]="logoPreviewUrl" 
+                  alt="Logo Preview" 
+                  class="img-thumbnail"
+                  style="max-height: 100px; max-width: 150px;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo Position -->
+          <div class="mb-3">
+            <label class="form-label">Logo Position</label>
+            <select 
+              class="form-select" 
+              [(ngModel)]="config.logo_position"
+              [disabled]="isLoading">
+              <option *ngFor="let pos of positions" [value]="pos.value">
+                {{ pos.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Scale Down -->
+          <div class="mb-4">
+            <label class="form-label">
+              Logo Scale ({{ config.scale_down }})
+            </label>
+            <input 
+              type="range" 
+              class="form-range" 
+              [(ngModel)]="config.scale_down"
+              min="0.1" 
+              max="1" 
+              step="0.05"
+              [disabled]="isLoading">
+            <div class="d-flex justify-content-between">
+              <small class="text-muted">Small (0.1)</small>
+              <small class="text-muted">Original Size (1.0)</small>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="d-grid">
+            <button 
+              class="btn btn-primary" 
+              (click)="saveConfig()"
+              [disabled]="isLoading || (!selectedLogoFile && !existingLogoUrl) || (!selectedConfigId && !canCreateNew())">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+              {{ isLoading ? 'Saving...' : (selectedConfigId ? 'Update Configuration' : 'Save New Configuration') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+<div class="d-flex align-items-center justify-content-end gap-3 py-2 px-4 w-100">
+  <span *ngIf="auth.isAuthenticated$ | async" class="me-2">
+    Welcome, {{ (auth.user$ | async)?.name }}
+  </span>
+  <button *ngIf="!(auth.isAuthenticated$ | async)" class="btn btn-primary" (click)="auth.loginWithRedirect()">Sign in</button>
+  <button *ngIf="auth.isAuthenticated$ | async" class="btn btn-danger" (click)="auth.logout({ logoutParams: { returnTo: logoutReturnTo } })">Logout</button>
+</div>
