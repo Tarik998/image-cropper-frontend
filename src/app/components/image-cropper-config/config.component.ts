@@ -22,11 +22,10 @@ export class ConfigComponent {
   existingLogoUrl: string | null = null;
   isLoading = false;
   
-  // Configuration management
   savedConfigs: CropConfig[] = [];
   selectedConfigId: number | null = null;
   showConfigList = false;
-  maxConfigs = 3; // Maximum allowed configurations
+  maxConfigs = 3;
 
   positions = [
     { value: 'top-left', label: 'Top Left' },
@@ -45,15 +44,13 @@ export class ConfigComponent {
     this.imageService.getAllConfigs().subscribe({
       next: (configs: any) => {
         this.savedConfigs = configs;
-        // Load the most recent config by default
+
         if (configs.length > 0) {
           this.loadConfigById(configs[0].id!);
         }
         this.isLoading = false;
       },
       error: (error: any) => {
-        console.error('Error loading configurations:', error);
-        alert('Error loading configurations');
         this.isLoading = false;
       }
     });
@@ -65,16 +62,13 @@ export class ConfigComponent {
     this.config = { ...selectedConfig };
     this.selectedConfigId = configId;
     
-    // Display existing logo if available
     this.existingLogoUrl = selectedConfig.logo_image || null;
     
-    // Clear any new logo selection
     this.selectedLogoFile = null;
     this.logoPreviewUrl = null;
   }
 }
 
-  // Check if configuration has a logo
   hasLogo(config: CropConfig): boolean {
     return !!(config.logo_image && config.logo_image.trim());
   }
@@ -82,15 +76,9 @@ export class ConfigComponent {
   onLogoFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
-      // Check file size (limit to 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Logo image must be smaller than 2MB');
-        return;
-      }
-
+    
       this.selectedLogoFile = file;
       
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         this.logoPreviewUrl = e.target?.result as string;
@@ -104,7 +92,6 @@ export class ConfigComponent {
   saveConfig(): void {
     this.isLoading = true;
 
-    // If new logo selected, convert to base64
     if (this.selectedLogoFile) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -112,7 +99,6 @@ export class ConfigComponent {
       };
       reader.readAsDataURL(this.selectedLogoFile);
     } else {
-      // Use existing logo - convert null to undefined
       this.submitConfig(this.existingLogoUrl || undefined);
     }
   }
@@ -120,10 +106,9 @@ export class ConfigComponent {
   private submitConfig(logoImage: string | undefined): void {
     const configWithLogo: CropConfig = {
       ...this.config,
-      logo_image: logoImage // Now properly typed as string | undefined
+      logo_image: logoImage
     };
 
-    // Include ID if updating existing config
     if (this.selectedConfigId) {
       configWithLogo.id = this.selectedConfigId;
     }
@@ -138,7 +123,6 @@ export class ConfigComponent {
         this.logoPreviewUrl = null;
         this.isLoading = false;
         
-        // Notify other components about config changes
         this.imageService.notifyConfigChanged();
       },
       error: (error: any) => {
@@ -160,12 +144,9 @@ export class ConfigComponent {
           }
           this.loadAllConfigs();
           
-          // Notify other components about config changes
           this.imageService.notifyConfigChanged();
         },
         error: (error: any) => {
-          console.error('Delete error:', error);
-          alert('Error deleting configuration');
           this.isLoading = false;
         }
       });
@@ -199,7 +180,7 @@ export class ConfigComponent {
 
   removeExistingLogo(): void {
     this.existingLogoUrl = null;
-    this.config.logo_image = undefined; // Changed from null to undefined
+    this.config.logo_image = undefined; 
   }
 
   formatDate(dateString: string): string {

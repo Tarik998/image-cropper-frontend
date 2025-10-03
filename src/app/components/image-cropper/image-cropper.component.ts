@@ -23,11 +23,9 @@ export class ImageCropperComponent implements OnDestroy {
   selectedFile: File | null = null;
   finalImageUrl: string | null = null;
   
-  // Config selection properties
   availableConfigs: CropConfig[] = [];
-  selectedConfigId: number | null = null; // Default to null (No Configuration)
+  selectedConfigId: number | null = null;
   
-  // Subscription for cleanup
   private configChangedSubscription: Subscription;
 
   constructor(
@@ -36,7 +34,6 @@ export class ImageCropperComponent implements OnDestroy {
   ) {
     this.loadConfigs();
     
-    // Listen for config changes from other components
     this.configChangedSubscription = this.imageService.configChanged$.subscribe(() => {
       this.loadConfigs();
     });
@@ -51,13 +48,11 @@ export class ImageCropperComponent implements OnDestroy {
   loadConfigs() {
     this.imageService.getAllConfigs().subscribe(configs => {
       this.availableConfigs = configs;
-      // Set default to "No Configuration" (null)
       this.selectedConfigId = null;
     });
   }
 
   onConfigChange() {
-    // If user selects a config but is not authenticated, show message and reset
     if (this.selectedConfigId !== null) {
       this.auth.isAuthenticated$.subscribe(isAuthenticated => {
         if (!isAuthenticated) {
@@ -86,27 +81,21 @@ export class ImageCropperComponent implements OnDestroy {
 
     const cropParams = this.getCropParams();
 
-    // Check authentication if config is selected
     if (this.selectedConfigId !== null) {
       this.auth.isAuthenticated$.subscribe(isAuthenticated => {
         if (!isAuthenticated) {
-          alert('Please sign in to use logo configurations. Only basic cropping is available without authentication.');
-          // Reset to "No Configuration"
           this.selectedConfigId = null;
           return;
         }
         
-        // Proceed with the unified service call
         this.performCrop(cropParams);
       });
     } else {
-      // No authentication needed for simple crop
       this.performCrop(cropParams);
     }
   }
 
   private performCrop(cropParams: any): void {
-    // Use unified service method - pass null for no config, or the selected configId
     this.imageService.cropImage(this.selectedFile!, cropParams, this.selectedConfigId).subscribe({
       next: (blob) => {
         const reader = new FileReader();
@@ -118,8 +107,6 @@ export class ImageCropperComponent implements OnDestroy {
       error: (error) => {
         console.error('Error processing image:', error);
         if (error.status === 401) {
-          alert('Authentication required. Please sign in to use logo configurations.');
-          // Reset to "No Configuration"
           this.selectedConfigId = null;
         } else {
           alert('Error processing image. Please try again.');

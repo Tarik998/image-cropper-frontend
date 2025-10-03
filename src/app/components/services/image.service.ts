@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { CropConfig, CropParams } from './../../models/interfaces';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageService {
-  private readonly apiUrl = 'http://localhost:5001/api';
+  private readonly apiUrl = environment.apiUrl;
   
-  // Subject to notify components about config changes
   private configChangedSubject = new Subject<void>();
   public configChanged$ = this.configChangedSubject.asObservable();
 
@@ -31,7 +31,6 @@ export class ImageService {
     return this.http.delete(`${this.apiUrl}/config/${configId}`);
   }
 
-  // Method to notify components about config changes
   notifyConfigChanged(): void {
     this.configChangedSubject.next();
   }
@@ -44,7 +43,6 @@ export class ImageService {
     formData.append('width', cropParams.width.toString());
     formData.append('height', cropParams.height.toString());
     
-    // Only append configId if it's provided and not null
     if (configId !== null && configId !== undefined) {
       formData.append('configId', configId.toString());
     }

@@ -21,5 +21,4 @@ import { AuthBarComponent } from "./components/auth/auth.component";
 export class App {
   logoutReturnTo = window.location.origin;
   constructor(public auth: AuthService) {}
-
 }

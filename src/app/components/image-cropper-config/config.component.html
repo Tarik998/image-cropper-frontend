@@ -1,7 +1,9 @@
 <div class="container py-4">
   <div class="row justify-content-center">
     <div class="col-md-10">
+
       <!-- Saved Configurations Section -->
+
       <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
@@ -15,7 +17,7 @@
           </button>
         </div>
         
-        <!-- Configuration Limit Info -->
+         
         <div class="card-body bg-light" *ngIf="!canCreateNew()">
           <div class="alert alert-warning mb-0">
             <strong>Configuration Limit Reached:</strong> 
@@ -25,13 +27,16 @@
         </div>
 
         <!-- Configuration List -->
+
         <div class="card-body" *ngIf="showConfigList">
           <div class="row" *ngIf="savedConfigs.length > 0; else noConfigs">
             <div class="col-md-6 col-lg-4 mb-3" *ngFor="let savedConfig of savedConfigs">
               <div class="card h-100" 
                    [class.border-primary]="selectedConfigId === savedConfig.id">
                 <div class="card-body">
+
                   <!-- Config Details -->
+
                   <h6 class="card-title">Config #{{ savedConfig.id }}</h6>
                   <p class="card-text small">
                     <strong>Position:</strong> {{ getPositionLabel(savedConfig.logo_position) }}<br>
@@ -44,6 +49,7 @@
                   </p>
                   
                   <!-- Action Buttons -->
+
                   <div class="d-grid gap-1">
                     <button 
                       class="btn btn-sm"
@@ -74,6 +80,7 @@
       </div>
 
       <!-- Current Configuration Editor -->
+
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
@@ -88,7 +95,9 @@
           </button>
         </div>
         <div class="card-body">
+
           <!-- Current Logo Display -->
+
           <div class="mb-4" *ngIf="existingLogoUrl && !logoPreviewUrl">
             <label class="form-label">Current Logo</label>
             <div class="d-flex align-items-center">
@@ -111,6 +120,7 @@
           </div>
 
           <!-- Logo Image Upload -->
+
           <div class="mb-4">
             <label class="form-label">
               {{ existingLogoUrl ? 'Change Logo Image' : 'Logo Image' }}
@@ -124,6 +134,7 @@
               [disabled]="isLoading">
             
             <!-- New Logo Preview -->
+
             <div *ngIf="logoPreviewUrl" class="mt-3">
               <label class="form-label">New Logo Preview</label>
               <div class="d-flex align-items-center">
@@ -137,6 +148,7 @@
           </div>
 
           <!-- Logo Position -->
+
           <div class="mb-3">
             <label class="form-label">Logo Position</label>
             <select 
@@ -150,6 +162,7 @@
           </div>
 
           <!-- Scale Down -->
+
           <div class="mb-4">
             <label class="form-label">
               Logo Scale ({{ config.scale_down }})
@@ -169,6 +182,7 @@
           </div>
 
           <!-- Save Button -->
+           
           <div class="d-grid">
             <button 
               class="btn btn-primary" 

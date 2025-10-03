@@ -27,15 +27,12 @@
   box-shadow: 0 1px 4px #0001;
   margin-top: 6px;
 }
-/* Custom styles for image cropper component - minimal overrides */
 
-/* Ensure the image cropper component takes full width */
 :host ::ng-deep image-cropper {
   width: 100%;
   display: block;
 }
 
-/* Custom dashed border style for upload area */
 .border-dashed {
   border-style: dashed !important;
 }

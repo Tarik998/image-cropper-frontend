@@ -1,18 +1,23 @@
 <div class="container py-4">
   <div class="row">
+
     <!-- Upload Section -->
+
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
           <h5>Upload & Crop Image</h5>
         </div>
         <div class="card-body">
+
           <!-- File Upload -->
+
           <div class="mb-3">
             <input type="file" class="form-control" (change)="fileChangeEvent($event)" accept="image/*">
           </div>
 
           <!-- Configuration Selection -->
+
           <div class="mb-3">
             <label for="configSelect" class="form-label">Configuration</label>
             <select 
@@ -21,7 +26,7 @@
               [(ngModel)]="selectedConfigId"
               (change)="onConfigChange()">
               <option [value]="null">No Configuration</option>
-              <!-- Show configs only for authenticated users -->
+
               <ng-container *ngIf="auth.isAuthenticated$ | async">
                 <option 
                   *ngFor="let config of availableConfigs" 
@@ -31,7 +36,6 @@
               </ng-container>
             </select>
             
-            <!-- Login prompt for non-authenticated users -->
             <div *ngIf="!(auth.isAuthenticated$ | async)" class="mt-2">
               <div class="alert alert-info py-2 px-3 mb-0">
                 <small>
@@ -48,6 +52,7 @@
           </div>
 
           <!-- Image Cropper -->
+
           <div *ngIf="imageChangedEvent">
             <image-cropper
               [imageChangedEvent]="imageChangedEvent"
@@ -59,6 +64,7 @@
           </div>
 
           <!-- Generate Button -->
+
           <div class="d-grid mt-3">
             <button 
               class="btn btn-primary" 
@@ -72,6 +78,7 @@
     </div>
 
     <!-- Result Section -->
+     
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
