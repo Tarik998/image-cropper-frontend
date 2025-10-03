@@ -9,7 +9,7 @@ import { CropConfig, CropParams } from './../../models/interfaces';
 export class ImageService {
   private readonly apiUrl = 'http://localhost:5001/api';
   
-  // Subject to notify components about config changes
+  
   private configChangedSubject = new Subject<void>();
   public configChanged$ = this.configChangedSubject.asObservable();
 
@@ -31,7 +31,7 @@ export class ImageService {
     return this.http.delete(`${this.apiUrl}/config/${configId}`);
   }
 
-  // Method to notify components about config changes
+  
   notifyConfigChanged(): void {
     this.configChangedSubject.next();
   }
@@ -44,7 +44,6 @@ export class ImageService {
     formData.append('width', cropParams.width.toString());
     formData.append('height', cropParams.height.toString());
     
-    // Only append configId if it's provided and not null
     if (configId !== null && configId !== undefined) {
       formData.append('configId', configId.toString());
     }
