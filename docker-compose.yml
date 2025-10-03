@@ -13,7 +13,17 @@ services:
 
   backend:
     build: ../image-cropper-backend
-    env_file: ../image-cropperbackend/.env.docker
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: image_cropper
+      CORS_ORIGIN: http://localhost:4200
+      DB_SSL: "false"
+
     ports:
       - "5001:5001"
     depends_on:
