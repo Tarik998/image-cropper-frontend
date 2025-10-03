@@ -1,8 +1,3 @@
-/**
- * Core interfaces for the Image Cropper application
- * These interfaces provide type safety and better documentation
- */
-
 export interface CropParams {
   x: number;
   y: number;
