@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://backend:5001/api'
+  apiUrl: 'https://image-cropper-backend-332772182253.us-central1.run.app/api'
 };
