@@ -10,6 +10,11 @@ services:
       - ../image-cropper-backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d image_cropper"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ../image-cropper-backend
@@ -23,18 +28,19 @@ services:
       DB_NAME: image_cropper
       CORS_ORIGIN: http://localhost:4200
       DB_SSL: "false"
-
     ports:
       - "5001:5001"
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     volumes:
       - backend_uploads:/app/uploads
+    restart: on-failure
 
   frontend:
     build: .
     ports:
-      - "4200:4200"
+      - "4200:8080"
     depends_on:
       - backend
 
