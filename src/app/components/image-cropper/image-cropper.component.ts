@@ -22,6 +22,7 @@ export class ImageCropperComponent implements OnDestroy {
   croppedImage: any = '';
   selectedFile: File | null = null;
   finalImageUrl: string | null = null;
+  generatedImageBlob: Blob | null = null;
   
   availableConfigs: CropConfig[] = [];
   selectedConfigId: number | null = null;
@@ -46,9 +47,15 @@ export class ImageCropperComponent implements OnDestroy {
   }
 
   loadConfigs() {
-    this.imageService.getAllConfigs().subscribe(configs => {
-      this.availableConfigs = configs;
-      this.selectedConfigId = null;
+    this.imageService.getAllConfigs().subscribe({
+      next: (result) => {
+        this.availableConfigs = result.configs;
+        this.selectedConfigId = null;
+      },
+      error: (error) => {
+        console.error('Error loading configs:', error);
+        this.availableConfigs = [];
+      }
     });
   }
 
@@ -58,19 +65,58 @@ export class ImageCropperComponent implements OnDestroy {
         if (!isAuthenticated) {
           alert('Please sign in to access logo configurations.');
           this.selectedConfigId = null;
+          return;
         }
+        
+        this.generatePreview();
       });
+    } else {
+      this.finalImageUrl = null;
+      this.generatedImageBlob = null;
     }
+  }
+
+  /**
+   * Generate preview with logo overlay (uses /api/image/preview)
+   */
+  private generatePreview() {
+    if (!this.selectedFile || !this.croppedImage || this.selectedConfigId === null) {
+      return;
+    }
+
+    const cropParams = this.getCropParams();
+    
+    this.imageService.cropImage(this.selectedFile, cropParams, this.selectedConfigId).subscribe({
+      next: (blob) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.finalImageUrl = reader.result as string;
+        };
+        reader.readAsDataURL(blob);
+      },
+      error: (error) => {
+        console.error('Error generating preview:', error);
+        if (error.status === 401) {
+          this.selectedConfigId = null;
+        }
+      }
+    });
   }
 
   fileChangeEvent(event: any): void {
     this.imageChangedEvent = event;
     this.selectedFile = event.target.files[0];
     this.finalImageUrl = null;
+    this.generatedImageBlob = null;
   }
 
   imageCropped(event: ImageCroppedEvent) {
     this.croppedImage = event;
+    this.generatedImageBlob = null;
+
+    if (this.selectedConfigId !== null) {
+      this.generatePreview();
+    }
   }
 
   generateImage(): void {
@@ -96,8 +142,10 @@ export class ImageCropperComponent implements OnDestroy {
   }
 
   private performCrop(cropParams: any): void {
-    this.imageService.cropImage(this.selectedFile!, cropParams, this.selectedConfigId).subscribe({
+    this.imageService.generateImage(this.selectedFile!, cropParams, this.selectedConfigId).subscribe({
       next: (blob) => {
+        this.generatedImageBlob = blob;
+        
         const reader = new FileReader();
         reader.onload = () => {
           this.finalImageUrl = reader.result as string;
@@ -137,12 +185,10 @@ export class ImageCropperComponent implements OnDestroy {
   }
 
   downloadImage(): void {
-  if (this.finalImageUrl) {
-    fetch(this.finalImageUrl)
-      .then(response => response.blob())
-      .then(blob => {
-        saveAs(blob, 'cropped-image.jpg');
-      });
+    if (this.generatedImageBlob) {
+      saveAs(this.generatedImageBlob, 'cropped-image.png');
+    } else {
+      alert('Please generate an image first by clicking "Generate Image"');
+    }
   }
-}
 }

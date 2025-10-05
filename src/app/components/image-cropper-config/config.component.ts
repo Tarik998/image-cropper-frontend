@@ -13,8 +13,9 @@ import { FormsModule } from '@angular/forms';
 })
 export class ConfigComponent {
   config: CropConfig = {
+    name: 'New Configuration',
     logo_position: 'bottom-right',
-    scale_down: 0.25
+    logo_scale: 0.25
   };
 
   selectedLogoFile: File | null = null;
@@ -39,35 +40,38 @@ export class ConfigComponent {
     this.loadAllConfigs();
   }
 
+
+
   loadAllConfigs(): void {
     this.isLoading = true;
     this.imageService.getAllConfigs().subscribe({
-      next: (configs: any) => {
-        this.savedConfigs = configs;
+      next: (result: any) => {
+        this.savedConfigs = result.configs || [];
 
-        if (configs.length > 0) {
-          this.loadConfigById(configs[0].id!);
+        if (this.savedConfigs.length > 0 && !this.selectedConfigId) {
+          this.loadConfigById(this.savedConfigs[0].id!);
         }
         this.isLoading = false;
       },
       error: (error: any) => {
+        console.error('Error loading configs:', error);
         this.isLoading = false;
       }
     });
   }
 
- loadConfigById(configId: number): void {
-  const selectedConfig = this.savedConfigs.find(c => c.id === configId);
-  if (selectedConfig) {
-    this.config = { ...selectedConfig };
-    this.selectedConfigId = configId;
-    
-    this.existingLogoUrl = selectedConfig.logo_image || null;
-    
-    this.selectedLogoFile = null;
-    this.logoPreviewUrl = null;
+  loadConfigById(configId: number): void {
+    const selectedConfig = this.savedConfigs.find(c => c.id === configId);
+    if (selectedConfig) {
+      this.config = { ...selectedConfig };
+      this.selectedConfigId = configId;
+      
+      this.existingLogoUrl = selectedConfig.logo_image || null;
+      
+      this.selectedLogoFile = null;
+      this.logoPreviewUrl = null;
+    }
   }
-}
 
   hasLogo(config: CropConfig): boolean {
     return !!(config.logo_image && config.logo_image.trim());
@@ -113,8 +117,12 @@ export class ConfigComponent {
       configWithLogo.id = this.selectedConfigId;
     }
 
-    this.imageService.saveConfig(configWithLogo).subscribe({
-      next: (response: any) => {
+    const saveMethod = this.selectedConfigId ? 
+      this.imageService.updateConfig(this.selectedConfigId, configWithLogo) :
+      this.imageService.createConfig(configWithLogo);
+
+    saveMethod.subscribe({
+      next: (response: CropConfig) => {
         console.log('Saved config:', response);
         const action = this.selectedConfigId ? 'updated' : 'created';
         alert(`Configuration ${action} successfully!`);
@@ -127,7 +135,8 @@ export class ConfigComponent {
       },
       error: (error: any) => {
         console.error('Save error:', error);
-        alert('Error saving configuration');
+        const errorMessage = error.error?.message || 'Error saving configuration';
+        alert(errorMessage);
         this.isLoading = false;
       }
     });
@@ -160,8 +169,9 @@ export class ConfigComponent {
     }
 
     this.config = {
+      name: 'New Configuration',
       logo_position: 'bottom-right',
-      scale_down: 0.25
+      logo_scale: 0.25
     };
     this.selectedConfigId = null;
     this.existingLogoUrl = null;

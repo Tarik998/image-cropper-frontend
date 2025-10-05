@@ -6,10 +6,11 @@ export interface CropParams {
 }
 
 export interface CropConfig {
-created_at?: string;
   id?: number;
+  name: string;
   logo_position: string;
-  scale_down: number;
-  image_id?: number;
-  logo_image?: string; 
+  logo_scale: number;
+  logo_image?: string;
+  created_at?: string;
+  updated_at?: string;
 }

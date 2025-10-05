@@ -31,7 +31,7 @@
                 <option 
                   *ngFor="let config of availableConfigs" 
                   [value]="config.id">
-                  Config {{ config.id }} - {{ getPositionLabel(config.logo_position) }} ({{ config.scale_down }})
+                  Config {{ config.id }} - {{ getPositionLabel(config.logo_position) }}
                 </option>
               </ng-container>
             </select>
@@ -70,7 +70,8 @@
               class="btn btn-primary" 
               (click)="generateImage()"
               [disabled]="!croppedImage">
-              Generate Image
+              <i class="bi bi-gear-fill me-1"></i>
+              Generate High-Quality Image
             </button>
           </div>
         </div>
@@ -82,17 +83,36 @@
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
-          <h5>Final Result</h5>
+          <h5>Preview & Result</h5>
+          <small class="text-muted">
+            <span *ngIf="selectedConfigId !== null; else noConfigText">
+              Preview with logo overlay • Click "Generate Image" for high-quality download
+            </span>
+            <ng-template #noConfigText>
+              Select a configuration to preview with logo overlay
+            </ng-template>
+          </small>
         </div>
         <div class="card-body text-center">
           <div *ngIf="finalImageUrl; else noImage">
-            <img [src]="finalImageUrl" class="img-fluid mb-3" alt="Final Result">
-            <button class="btn btn-success" (click)="downloadImage()">
-              Download Image
-            </button>
+            <img [src]="finalImageUrl" class="img-fluid mb-3" alt="Preview Result">
+            <div class="d-flex gap-2 justify-content-center">
+              <button 
+                *ngIf="generatedImageBlob" 
+                class="btn btn-success" 
+                (click)="downloadImage()">
+                <i class="bi bi-download me-1"></i>
+                Download High-Quality Image
+              </button>
+              <span 
+                *ngIf="!generatedImageBlob" 
+                class="text-muted small">
+                This is a preview. Click "Generate Image" to create downloadable version.
+              </span>
+            </div>
           </div>
           <ng-template #noImage>
-            <p class="text-muted">Final image will appear here</p>
+            <p class="text-muted">Preview will appear here</p>
           </ng-template>
         </div>
       </div>
