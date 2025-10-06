@@ -1,59 +1,89 @@
-# Frontend
+# Image Cropper Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.3.
+## Quick Start
 
-## Development server
+### Prerequisites
+- **Node.js** (v20 or higher)
+- **npm** (comes with Node.js)
+- **Docker** (optional, for containerized development)
 
-To start a local development server, run:
-
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/Tarik998/image-cropper-frontend.git
+cd image-cropper-frontend
+
+# Install dependencies
+npm install
+```
+
+## Development
+
+### Method 1: Direct Development
+```bash
+# Start development server
+npm start
+# or
 ng serve
+
+# Application will be available at:
+# http://localhost:4200
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### Method 2: Docker Compose (Full Stack)
 ```bash
-ng generate component component-name
+# Start all services (frontend, backend, database)
+docker-compose up --build
+
+# Services will be available at:
+# Frontend: http://localhost:4200
+# Backend:  http://localhost:5001
+# Database: localhost:5432
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Environment Files
 
-```bash
-ng generate --help
+**Development (`src/environments/environment.ts`):**
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:5001/api'
+};
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
+**Production (`src/environments/environment.prod.ts`):**
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: 'https://image-cropper-backend-332772182253.us-central1.run.app/api'
+};
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Features
 
-## Running unit tests
+- **Image Upload & Cropping** - Drag & drop or click to upload images
+- **Live Preview** - Real-time cropping preview
+- **Logo Overlay** - Add configurable logo overlays to cropped images
+- **Multiple Configurations** - Save and manage different cropping presets
+- **Responsive Design** - Works on desktop and mobile devices
+- **Download Results** - Download cropped images instantly
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
 
-```bash
-ng test
-```
+## Live Application
 
-## Running end-to-end tests
+**Live URL:** https://image-cropper-frontend-332772182253.us-central1.run.app
 
-For end-to-end (e2e) testing, run:
+### Deployment Details
+- **Platform:** Google Cloud Run
+- **Region:** us-central1 (Iowa)
+- **Backend API:** https://image-cropper-backend-332772182253.us-central1.run.app
+- **Database:** Google Cloud SQL (PostgreSQL)
+- **Deployment Method:** Automated from GitHub using Google Cloud Build
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+### How to Access
+1. Visit the live URL above
+2. Upload an image by clicking "Choose File" or dragging & dropping
+3. Adjust cropping area as needed
+4. Configure logo overlay (optional)
+5. Click "Crop Image" to process
+6. Download your cropped result
